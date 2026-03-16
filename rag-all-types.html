@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complete RAG Types Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08090c;
+    --bg2: #0e1117;
+    --bg3: #141820;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --dim: #4b5563;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 80px 40px 60px;
+    text-align: center;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(99,102,241,0.08), transparent);
+    pointer-events: none;
+  }
+  .hero-label {
+    display: inline-block;
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #818cf8;
+    border: 1px solid rgba(129,140,248,0.3);
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 6vw, 64px);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1.05;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #e8eaf0 0%, #818cf8 60%, #c084fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    color: var(--muted);
+    font-size: 13px;
+    max-width: 560px;
+    margin: 0 auto 40px;
+    line-height: 1.7;
+  }
+
+  /* ── DECISION STRIP ── */
+  .decision-strip {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 40px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+  }
+  .decision-strip .label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-right: 8px;
+  }
+  .d-pill {
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    font-family: inherit;
+  }
+  .d-pill:hover, .d-pill.active {
+    color: var(--text);
+    border-color: var(--accent);
+    background: rgba(255,255,255,0.04);
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main { max-width: 1200px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* ── SECTION ── */
+  .rag-section {
+    margin-top: 56px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .rag-section:hover { border-color: var(--border2); }
+
+  .section-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 20px;
+    align-items: center;
+    padding: 28px 32px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .section-header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--accent-bg);
+    opacity: 0.04;
+  }
+  .section-icon {
+    width: 52px; height: 52px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    flex-shrink: 0;
+  }
+  .section-meta { min-width: 0; }
+  .section-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .section-tagline { font-size: 12px; color: var(--muted); }
+  .section-badges { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .badge {
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  /* ── WHY BOX ── */
+  .why-box {
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .why-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    white-space: nowrap;
+    padding-top: 2px;
+  }
+  .why-text { font-size: 12px; color: #9ca3af; line-height: 1.7; font-style: italic; }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow-section {
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    overflow-x: auto;
+  }
+  .flow-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    min-width: max-content;
+  }
+  .flow-node {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 10px 16px;
+    text-align: center;
+    min-width: 110px;
+  }
+  .flow-node.accent {
+    border-color: var(--accent);
+    background: rgba(255,255,255,0.03);
+  }
+  .flow-node .fn-icon { font-size: 16px; margin-bottom: 4px; }
+  .flow-node .fn-title { font-size: 11px; font-weight: 500; color: var(--text); }
+  .flow-node .fn-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .flow-arrow {
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .flow-branch {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .flow-branch-label {
+    font-size: 9px;
+    color: var(--muted);
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  /* ── USE CASES ── */
+  .usecases-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+  .usecase-card {
+    padding: 22px 24px;
+    border-right: 1px solid var(--border);
+    position: relative;
+    transition: background 0.2s;
+  }
+  .usecase-card:last-child { border-right: none; }
+  .usecase-card:hover { background: rgba(255,255,255,0.02); }
+  .uc-num {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .uc-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .uc-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 12px;
+  }
+  .uc-fit {
+    display: inline-block;
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border2);
+    color: var(--accent);
+  }
+
+  /* ── COMPARISON TABLE ── */
+  .comparison-section {
+    margin-top: 72px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .comp-header {
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .comp-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .comp-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    padding: 14px 20px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    font-weight: 400;
+  }
+  td {
+    padding: 14px 20px;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+    color: #9ca3af;
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  td:first-child { color: var(--text); font-weight: 500; font-family: 'Syne', sans-serif; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+
+  /* ── FOOTER ── */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 40px;
+    text-align: center;
+    color: var(--dim);
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 3px; }
+
+  @media (max-width: 768px) {
+    .usecases-grid { grid-template-columns: 1fr; }
+    .usecase-card { border-right: none; border-bottom: 1px solid var(--border); }
+    .usecase-card:last-child { border-bottom: none; }
+    .section-header { grid-template-columns: auto 1fr; }
+    .section-badges { display: none; }
+    .hero { padding: 60px 20px 40px; }
+    .main { padding: 0 16px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">Beginner's Field Guide</div>
+  <h1>Every RAG Type<br>Explained</h1>
+  <p class="hero-sub">Basic → Self → Corrective → Fusion → Speculative → Adaptive → Modular → Agentic → Graph RAG — with real use-cases for each.</p>
+</div>
+
+<!-- NAV PILLS -->
+<div class="decision-strip">
+  <span class="label">JUMP TO →</span>
+  <button class="d-pill" onclick="scrollTo('basic')">📚 Basic</button>
+  <button class="d-pill" onclick="scrollTo('self')">🪞 Self</button>
+  <button class="d-pill" onclick="scrollTo('corrective')">🔧 Corrective</button>
+  <button class="d-pill" onclick="scrollTo('fusion')">⚡ Fusion</button>
+  <button class="d-pill" onclick="scrollTo('speculative')">🔮 Speculative</button>
+  <button class="d-pill" onclick="scrollTo('adaptive')">🧬 Adaptive</button>
+  <button class="d-pill" onclick="scrollTo('modular')">🧩 Modular</button>
+  <button class="d-pill" onclick="scrollTo('agentic')">🤖 Agentic</button>
+  <button class="d-pill" onclick="scrollTo('graph')">🕸️ Graph</button>
+  <button class="d-pill" onclick="scrollTo('compare')">📊 Compare All</button>
+</div>
+
+<div class="main">
+
+<!-- ════════════════════════════════════
+     1. BASIC RAG
+════════════════════════════════════ -->
+<div class="rag-section" id="basic" style="--accent:#6ee7b7;--accent-bg:#6ee7b7;">
+  <div class="section-header">
+    <div class="section-icon">📚</div>
+    <div class="section-meta">
+      <div class="section-name">Basic RAG</div>
+      <div class="section-tagline">The foundation — retrieve then answer. Start every project here.</div>
+    </div>
+    <div class="section-badges">
+      <span class="badge" style="color:#6ee7b7;border-color:rgba(110,231,183,0.3);">Fast</span>
+      <span class="badge" style="color:#6ee7b7;border-color:rgba(110,231,183,0.3);">Cheap</span>
+      <span class="badge" style="color:#6ee7b7;border-color:rgba(110,231,183,0.3);">Beginner-friendly</span>
+    </div>
+  </div>
+  <div class="why-box">
+    <span class="why-label">WHY USE</span>
+    <span class="why-text">Your documents are stable, mistakes are recoverable (you can re-ask), and you want the simplest possible system to ship first. If something more complex is needed, you'll know after building this.</span>
+  </div>
+  <div class="flow-section">
+    <div class="flow-label">PIPELINE FLOW</div>
+    <div class="flow">
+      <div class="flow-node"><div class="fn-icon">❓</div><div class="fn-title">User Query</div><div class="fn-sub">"What causes rain?"</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🔍</div><div class="fn-title">Vector Store</div><div class="fn-sub">Top-3 chunks</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">📄</div><div class="fn-title">Context</div><div class="fn-sub">Retrieved docs</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🧠</div><div class="fn-title">LLM</div><div class="fn-sub">Query + context</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">✅</div><div class="fn-title">Answer</div><div class="fn-sub">Grounded response</div></div>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:#4b5563;">⚠ No self-checking — if retrieval quality is bad, the answer will be bad.</div>
+  </div>
+  <div class="usecases-grid">
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 01</div>
+      <div class="uc-title">College Handbook Chatbot</div>
+      <div class="uc-desc">Students ask questions about fees, hostel rules, exam schedules. The handbook PDF is indexed once. Answers come from retrieved sections — no web access needed.</div>
+      <span class="uc-fit">Stable docs, low stakes</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 02</div>
+      <div class="uc-title">Recipe Assistant</div>
+      <div class="uc-desc">User uploads 200 recipe PDFs. Ask "what can I cook with paneer and tomatoes?" — retrieves matching recipes and lists ingredients + steps instantly.</div>
+      <span class="uc-fit">Personal, forgiving errors</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 03</div>
+      <div class="uc-title">Book Club Q&A Bot</div>
+      <div class="uc-desc">Load a novel into a vector store. Members ask "why did the character betray him?" — bot retrieves relevant passages and summarises the arc.</div>
+      <span class="uc-fit">Creative, not safety-critical</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     2. SELF-RAG
+════════════════════════════════════ -->
+<div class="rag-section" id="self" style="--accent:#f87171;--accent-bg:#f87171;">
+  <div class="section-header">
+    <div class="section-icon">🪞</div>
+    <div class="section-meta">
+      <div class="section-name">Self-RAG</div>
+      <div class="section-tagline">The LLM critiques itself — grading retrieval quality and checking for hallucinations.</div>
+    </div>
+    <div class="section-badges">
+      <span class="badge" style="color:#f87171;border-color:rgba(248,113,113,0.3);">High accuracy</span>
+      <span class="badge" style="color:#f87171;border-color:rgba(248,113,113,0.3);">Slower</span>
+      <span class="badge" style="color:#f87171;border-color:rgba(248,113,113,0.3);">Anti-hallucination</span>
+    </div>
+  </div>
+  <div class="why-box">
+    <span class="why-label">WHY USE</span>
+    <span class="why-text">The LLM actively checks "am I making this up?" at each step. Worth the extra LLM calls when a wrong answer has real-world consequences — medical advice, legal clauses, financial figures.</span>
+  </div>
+  <div class="flow-section">
+    <div class="flow-label">PIPELINE FLOW</div>
+    <div class="flow">
+      <div class="flow-node"><div class="fn-icon">❓</div><div class="fn-title">User Query</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🤔</div><div class="fn-title">Reflect</div><div class="fn-sub">Need retrieval?</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">🔍</div><div class="fn-title">Retrieve</div><div class="fn-sub">Vector store</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🧪</div><div class="fn-title">Grade Docs</div><div class="fn-sub">Relevant? YES/NO</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">🧠</div><div class="fn-title">Generate</div><div class="fn-sub">From good docs only</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🔁</div><div class="fn-title">Self-Check</div><div class="fn-sub">Grounded? Retry if not</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">✅</div><div class="fn-title">Answer</div></div>
+    </div>
+  </div>
+  <div class="usecases-grid">
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 01</div>
+      <div class="uc-title">Medical Symptom Checker</div>
+      <div class="uc-desc">Patient describes symptoms. System retrieves clinical guidelines, grades relevance, generates answer — then verifies it's grounded in those exact guidelines before showing the user.</div>
+      <span class="uc-fit">Hallucination = harm</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 02</div>
+      <div class="uc-title">Legal Clause Explainer</div>
+      <div class="uc-desc">User uploads a contract. Ask "what happens if I miss payment?" — Self-RAG ensures the answer is pulled directly from the contract, not invented from general legal training data.</div>
+      <span class="uc-fit">Must cite actual clause</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 03</div>
+      <div class="uc-title">Financial Report Q&A</div>
+      <div class="uc-desc">Analysts ask about quarterly earnings. The self-check step confirms every number in the answer matches a retrieved table row — no hallucinated revenue figures ever reach the analyst.</div>
+      <span class="uc-fit">Numbers must be exact</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     3. CORRECTIVE RAG
+════════════════════════════════════ -->
+<div class="rag-section" id="corrective" style="--accent:#fbbf24;--accent-bg:#fbbf24;">
+  <div class="section-header">
+    <div class="section-icon">🔧</div>
+    <div class="section-meta">
+      <div class="section-name">Corrective RAG</div>
+      <div class="section-tagline">Evaluates retrieval quality — and falls back to web search when local docs aren't good enough.</div>
+    </div>
+    <div class="section-badges">
+      <span class="badge" style="color:#fbbf24;border-color:rgba(251,191,36,0.3);">Self-healing</span>
+      <span class="badge" style="color:#fbbf24;border-color:rgba(251,191,36,0.3);">Needs web access</span>
+      <span class="badge" style="color:#fbbf24;border-color:rgba(251,191,36,0.3);">Hybrid KB+Web</span>
+    </div>
+  </div>
+  <div class="why-box">
+    <span class="why-label">WHY USE</span>
+    <span class="why-text">When your local knowledge base might not have the answer — because it's outdated or out-of-scope — Corrective RAG silently falls back to web search instead of hallucinating an answer from thin air.</span>
+  </div>
+  <div class="flow-section">
+    <div class="flow-label">PIPELINE FLOW</div>
+    <div class="flow">
+      <div class="flow-node"><div class="fn-icon">❓</div><div class="fn-title">User Query</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">🔍</div><div class="fn-title">Retrieve</div><div class="fn-sub">Local KB</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🧪</div><div class="fn-title">Evaluate</div><div class="fn-sub">HIGH / LOW score</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-branch">
+        <div class="flow-node" style="background:rgba(110,231,183,0.06);border-color:rgba(110,231,183,0.3);"><div class="fn-title" style="font-size:10px">✅ HIGH → proceed</div></div>
+        <div class="flow-node" style="background:rgba(248,113,113,0.06);border-color:rgba(248,113,113,0.3);margin-top:4px;"><div class="fn-title" style="font-size:10px">❌ LOW → 🌐 Web search</div></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">🧹</div><div class="fn-title">Refine</div><div class="fn-sub">Clean results</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🧠</div><div class="fn-title">Generate</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">✅</div><div class="fn-title">Answer</div></div>
+    </div>
+  </div>
+  <div class="usecases-grid">
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 01</div>
+      <div class="uc-title">IT Helpdesk Assistant</div>
+      <div class="uc-desc">Internal docs cover most issues. When a user asks about a brand-new software bug not in the docs yet, it falls back to search StackOverflow or the vendor's latest release notes.</div>
+      <span class="uc-fit">Docs lag behind reality</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 02</div>
+      <div class="uc-title">Startup Research Tool</div>
+      <div class="uc-desc">Internal CRM has company notes. When a user asks about a competitor's latest funding round (not in CRM), fallback fetches live news — combining internal + live data in one answer.</div>
+      <span class="uc-fit">Mix of internal + live</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 03</div>
+      <div class="uc-title">E-commerce Support Bot</div>
+      <div class="uc-desc">Product catalogue in KB. If a customer asks about a product just launched this week (not yet indexed), fallback searches the live website to get the accurate current price and specs.</div>
+      <span class="uc-fit">KB always slightly stale</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     4. RAG FUSION
+════════════════════════════════════ -->
+<div class="rag-section" id="fusion" style="--accent:#a78bfa;--accent-bg:#a78bfa;">
+  <div class="section-header">
+    <div class="section-icon">⚡</div>
+    <div class="section-meta">
+      <div class="section-name">RAG Fusion</div>
+      <div class="section-tagline">Generates multiple query angles, retrieves for each, then fuses results using Reciprocal Rank Fusion.</div>
+    </div>
+    <div class="section-badges">
+      <span class="badge" style="color:#a78bfa;border-color:rgba(167,139,250,0.3);">Best coverage</span>
+      <span class="badge" style="color:#a78bfa;border-color:rgba(167,139,250,0.3);">Multi-angle</span>
+      <span class="badge" style="color:#a78bfa;border-color:rgba(167,139,250,0.3);">4× retrieval cost</span>
+    </div>
+  </div>
+  <div class="why-box">
+    <span class="why-label">WHY USE</span>
+    <span class="why-text">A single query often misses the best documents due to wording mismatch. By generating 4 perspectives and fusing results by overlap score, you get broader, more balanced context — especially for research-type or vague questions.</span>
+  </div>
+  <div class="flow-section">
+    <div class="flow-label">PIPELINE FLOW</div>
+    <div class="flow">
+      <div class="flow-node"><div class="fn-icon">❓</div><div class="fn-title">User Query</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">✏️</div><div class="fn-title">Query Rewriter</div><div class="fn-sub">LLM → 4 variants</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-branch">
+        <div class="flow-node" style="min-width:130px;margin-bottom:3px;"><div class="fn-sub">Retrieve Q1 "water cycle"</div></div>
+        <div class="flow-node" style="min-width:130px;margin-bottom:3px;"><div class="fn-sub">Retrieve Q2 "precipitation"</div></div>
+        <div class="flow-node" style="min-width:130px;margin-bottom:3px;"><div class="fn-sub">Retrieve Q3 "why does rain?"</div></div>
+        <div class="flow-node" style="min-width:130px;"><div class="fn-sub">Retrieve Q4 "meteorology"</div></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🔀</div><div class="fn-title">RRF Fusion</div><div class="fn-sub">Re-rank by overlap</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">🧠</div><div class="fn-title">LLM</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">✅</div><div class="fn-title">Answer</div></div>
+    </div>
+  </div>
+  <div class="usecases-grid">
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 01</div>
+      <div class="uc-title">Academic Research Assistant</div>
+      <div class="uc-desc">Student asks "impact of social media on teenagers". Fusion generates: mental health angle, screen time studies, peer pressure research — retrieves across all, ranks by doc overlap.</div>
+      <span class="uc-fit">Multi-angle topic</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 02</div>
+      <div class="uc-title">Job Description Matcher</div>
+      <div class="uc-desc">HR uploads 500 resumes. A vague query "find a strong backend developer" generates sub-queries per skill (Python, APIs, databases, system design) — fuses for best-fit candidates.</div>
+      <span class="uc-fit">Vague query, rich docs</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 03</div>
+      <div class="uc-title">Multilingual Support KB</div>
+      <div class="uc-desc">Users ask in Tamil, Hindi, and English. Fusion rewrites each query in all 3 languages and retrieves across all — so a Tamil query still finds English-only articles in the knowledge base.</div>
+      <span class="uc-fit">Language mismatch gap</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     5. SPECULATIVE RAG
+════════════════════════════════════ -->
+<div class="rag-section" id="speculative" style="--accent:#34d399;--accent-bg:#34d399;">
+  <div class="section-header">
+    <div class="section-icon">🔮</div>
+    <div class="section-meta">
+      <div class="section-name">Speculative RAG</div>
+      <div class="section-tagline">Small model drafts fast. Large model verifies. Speed + accuracy without full cost.</div>
+    </div>
+    <div class="section-badges">
+      <span class="badge" style="color:#34d399;border-color:rgba(52,211,153,0.3);">Fast + accurate</span>
+      <span class="badge" style="color:#34d399;border-color:rgba(52,211,153,0.3);">Production-grade</span>
+      <span class="badge" style="color:#34d399;border-color:rgba(52,211,153,0.3);">Two LLM calls</span>
+    </div>
+  </div>
+  <div class="why-box">
+    <span class="why-label">WHY USE</span>
+    <span class="why-text">A cheap fast model handles 80% of traffic correctly. The expensive model only verifies — so average latency and cost stay low even at scale. Best for production apps with response-time SLAs.</span>
+  </div>
+  <div class="flow-section">
+    <div class="flow-label">PIPELINE FLOW</div>
+    <div class="flow">
+      <div class="flow-node"><div class="fn-icon">❓</div><div class="fn-title">User Query</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-branch">
+        <div class="flow-node accent" style="margin-bottom:4px;"><div class="fn-title">⚡ Drafter (fast)</div><div class="fn-sub">GPT-3.5 / small model</div></div>
+        <div class="flow-node accent"><div class="fn-title">🔍 Retrieve evidence</div><div class="fn-sub">Guided by draft</div></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🧐</div><div class="fn-title">Verifier</div><div class="fn-sub">GPT-4 checks draft</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-branch">
+        <div class="flow-node" style="background:rgba(110,231,183,0.06);border-color:rgba(110,231,183,0.3);margin-bottom:3px;"><div class="fn-sub">✅ Pass → answer</div></div>
+        <div class="flow-node" style="background:rgba(248,113,113,0.06);border-color:rgba(248,113,113,0.3);"><div class="fn-sub">↻ Fail → re-draft</div></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">✅</div><div class="fn-title">Verified Answer</div></div>
+    </div>
+  </div>
+  <div class="usecases-grid">
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 01</div>
+      <div class="uc-title">Real-time Customer Support</div>
+      <div class="uc-desc">A fast model drafts the reply in under 1 second. GPT-4 verifies accuracy against policy docs before sending — so users get fast responses that are also verified against company policy.</div>
+      <span class="uc-fit">Speed SLA + accuracy</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 02</div>
+      <div class="uc-title">Coding Assistant with Docs</div>
+      <div class="uc-desc">Dev asks "how do I paginate with Django REST framework?" — fast model drafts code instantly. Verifier checks it against the actual DRF docs to catch deprecated API patterns.</div>
+      <span class="uc-fit">Docs evolve fast</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 03</div>
+      <div class="uc-title">EdTech Quiz Explainer</div>
+      <div class="uc-desc">After a student answers a question wrong, fast model explains why. Verifier ensures the explanation matches the actual textbook — so students never learn from a hallucinated explanation.</div>
+      <span class="uc-fit">Education = precision matters</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     6. ADAPTIVE RAG
+════════════════════════════════════ -->
+<div class="rag-section" id="adaptive" style="--accent:#38bdf8;--accent-bg:#38bdf8;">
+  <div class="section-header">
+    <div class="section-icon">🧬</div>
+    <div class="section-meta">
+      <div class="section-name">Adaptive RAG</div>
+      <div class="section-tagline">Dynamically chooses the right retrieval strategy per query — no-retrieval, single-step, or multi-step.</div>
+    </div>
+    <div class="section-badges">
+      <span class="badge" style="color:#38bdf8;border-color:rgba(56,189,248,0.3);">Smart routing</span>
+      <span class="badge" style="color:#38bdf8;border-color:rgba(56,189,248,0.3);">Query-aware</span>
+      <span class="badge" style="color:#38bdf8;border-color:rgba(56,189,248,0.3);">Efficient</span>
+    </div>
+  </div>
+  <div class="why-box">
+    <span class="why-label">WHY USE</span>
+    <span class="why-text">Not every question needs retrieval. Asking "what is 2+2?" doesn't need a vector search. Adaptive RAG classifies the query complexity first, then picks the cheapest strategy that can answer it correctly — saving cost and latency on simple queries.</span>
+  </div>
+  <div class="flow-section">
+    <div class="flow-label">PIPELINE FLOW</div>
+    <div class="flow">
+      <div class="flow-node"><div class="fn-icon">❓</div><div class="fn-title">User Query</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🧭</div><div class="fn-title">Complexity Classifier</div><div class="fn-sub">Simple / Medium / Hard</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-branch">
+        <div class="flow-node" style="min-width:150px;margin-bottom:3px;background:rgba(56,189,248,0.06);border-color:rgba(56,189,248,0.2)"><div class="fn-sub">Simple → No retrieval (LLM memory)</div></div>
+        <div class="flow-node" style="min-width:150px;margin-bottom:3px;background:rgba(56,189,248,0.06);border-color:rgba(56,189,248,0.2)"><div class="fn-sub">Medium → Single-step retrieval</div></div>
+        <div class="flow-node" style="min-width:150px;background:rgba(56,189,248,0.06);border-color:rgba(56,189,248,0.2)"><div class="fn-sub">Hard → Multi-step iterative</div></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🧠</div><div class="fn-title">Generate</div><div class="fn-sub">With right context</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">✅</div><div class="fn-title">Answer</div></div>
+    </div>
+  </div>
+  <div class="usecases-grid">
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 01</div>
+      <div class="uc-title">General-purpose Chatbot</div>
+      <div class="uc-desc">"What is machine learning?" → no retrieval needed. "Summarise our Q3 report" → single retrieval. "Compare our pricing to competitors over 5 years" → multi-step. One bot, adaptive cost.</div>
+      <span class="uc-fit">Mixed query complexity</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 02</div>
+      <div class="uc-title">Enterprise Search</div>
+      <div class="uc-desc">Employees search across HR policies, product docs, and technical specs. Simple greetings skip retrieval. Complex policy questions trigger deep multi-step search across multiple document sources.</div>
+      <span class="uc-fit">High query volume</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 03</div>
+      <div class="uc-title">Developer Documentation Bot</div>
+      <div class="uc-desc">"What does `async` do?" → LLM answers from memory. "How do I integrate OAuth with our Django app?" → multi-step retrieval across auth docs, Django docs, and internal codebase examples.</div>
+      <span class="uc-fit">Saves cost on trivial queries</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     7. MODULAR RAG
+════════════════════════════════════ -->
+<div class="rag-section" id="modular" style="--accent:#f472b6;--accent-bg:#f472b6;">
+  <div class="section-header">
+    <div class="section-icon">🧩</div>
+    <div class="section-meta">
+      <div class="section-name">Modular RAG</div>
+      <div class="section-tagline">Breaks the RAG pipeline into swappable components — each module is independent and replaceable.</div>
+    </div>
+    <div class="section-badges">
+      <span class="badge" style="color:#f472b6;border-color:rgba(244,114,182,0.3);">Composable</span>
+      <span class="badge" style="color:#f472b6;border-color:rgba(244,114,182,0.3);">Flexible</span>
+      <span class="badge" style="color:#f472b6;border-color:rgba(244,114,182,0.3);">Production-ready</span>
+    </div>
+  </div>
+  <div class="why-box">
+    <span class="why-label">WHY USE</span>
+    <span class="why-text">Real production systems need flexibility — swap the embedding model, change the retriever, update the re-ranker, or plug in a new LLM without rebuilding the whole pipeline. Modular RAG is an architecture pattern, not a technique.</span>
+  </div>
+  <div class="flow-section">
+    <div class="flow-label">MODULAR COMPONENTS (each is swappable independently)</div>
+    <div class="flow">
+      <div class="flow-node accent"><div class="fn-icon">🔤</div><div class="fn-title">Query Module</div><div class="fn-sub">Rewrite / expand</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🗄️</div><div class="fn-title">Retrieval Module</div><div class="fn-sub">Dense / Sparse / Hybrid</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🏅</div><div class="fn-title">Re-ranking Module</div><div class="fn-sub">Cohere / Cross-encoder</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🗜️</div><div class="fn-title">Compression Module</div><div class="fn-sub">Trim to token budget</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🧠</div><div class="fn-title">Generation Module</div><div class="fn-sub">Any LLM</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">✅</div><div class="fn-title">Answer</div></div>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:#4b5563;">🧩 Each module can be upgraded independently — change the re-ranker without touching the retriever.</div>
+  </div>
+  <div class="usecases-grid">
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 01</div>
+      <div class="uc-title">SaaS AI Product Platform</div>
+      <div class="uc-desc">A company builds one RAG framework and lets enterprise clients plug in their own retriever, LLM, and re-ranker. Each client's deployment is identical in structure but customised per module.</div>
+      <span class="uc-fit">Multi-tenant architecture</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 02</div>
+      <div class="uc-title">Regulated Industry Bot</div>
+      <div class="uc-desc">A fintech company swaps the LLM module for a locally-hosted model for data privacy, while keeping the same retrieval + re-ranking modules. No full rebuild — just module swap.</div>
+      <span class="uc-fit">Compliance-driven swap</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 03</div>
+      <div class="uc-title">A/B Testing RAG Quality</div>
+      <div class="uc-desc">ML team runs experiments: swap the embedding model module (OpenAI vs Cohere vs BGE) and measure answer quality independently — without changing retrieval logic, re-ranker, or LLM module.</div>
+      <span class="uc-fit">Experiment-friendly</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     8. AGENTIC RAG
+════════════════════════════════════ -->
+<div class="rag-section" id="agentic" style="--accent:#fb923c;--accent-bg:#fb923c;">
+  <div class="section-header">
+    <div class="section-icon">🤖</div>
+    <div class="section-meta">
+      <div class="section-name">Agentic RAG</div>
+      <div class="section-tagline">The LLM becomes an agent — it plans, decides which tools to call, and iterates until it has enough information to answer.</div>
+    </div>
+    <div class="section-badges">
+      <span class="badge" style="color:#fb923c;border-color:rgba(251,146,60,0.3);">Multi-step reasoning</span>
+      <span class="badge" style="color:#fb923c;border-color:rgba(251,146,60,0.3);">Tool use</span>
+      <span class="badge" style="color:#fb923c;border-color:rgba(251,146,60,0.3);">Most powerful</span>
+    </div>
+  </div>
+  <div class="why-box">
+    <span class="why-label">WHY USE</span>
+    <span class="why-text">Some questions can't be answered in one retrieval step. Agentic RAG lets the LLM reason about what it still needs to know, call tools (search, calculator, APIs, databases), and iterate — just like a human researcher would.</span>
+  </div>
+  <div class="flow-section">
+    <div class="flow-label">PIPELINE FLOW (iterative loop)</div>
+    <div class="flow">
+      <div class="flow-node"><div class="fn-icon">❓</div><div class="fn-title">User Query</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🧠</div><div class="fn-title">Agent / Planner</div><div class="fn-sub">What do I need?</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-branch">
+        <div class="flow-node" style="min-width:120px;margin-bottom:3px;background:rgba(251,146,60,0.06);border-color:rgba(251,146,60,0.2)"><div class="fn-sub">🔍 Search docs</div></div>
+        <div class="flow-node" style="min-width:120px;margin-bottom:3px;background:rgba(251,146,60,0.06);border-color:rgba(251,146,60,0.2)"><div class="fn-sub">🌐 Web search</div></div>
+        <div class="flow-node" style="min-width:120px;margin-bottom:3px;background:rgba(251,146,60,0.06);border-color:rgba(251,146,60,0.2)"><div class="fn-sub">🗃️ Query database</div></div>
+        <div class="flow-node" style="min-width:120px;background:rgba(251,146,60,0.06);border-color:rgba(251,146,60,0.2)"><div class="fn-sub">🧮 Use calculator</div></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🤔</div><div class="fn-title">Enough info?</div><div class="fn-sub">YES → answer, NO → loop</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">✅</div><div class="fn-title">Final Answer</div></div>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:#4b5563;">↻ The agent loops back to the planner if it decides it needs more information before answering.</div>
+  </div>
+  <div class="usecases-grid">
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 01</div>
+      <div class="uc-title">Investment Research Agent</div>
+      <div class="uc-desc">User asks: "Should I invest in Infosys?" — Agent: searches internal reports → fetches live stock data → queries earnings DB → reads recent news → synthesises a structured analysis with citations.</div>
+      <span class="uc-fit">Multi-source, multi-step</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 02</div>
+      <div class="uc-title">Automated Bug Reporter</div>
+      <div class="uc-desc">Engineer describes a bug. Agent searches codebase docs, queries the error log database, checks GitHub issues, and cross-references the changelog — then writes a complete bug report with root cause.</div>
+      <span class="uc-fit">Iterative investigation</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 03</div>
+      <div class="uc-title">Travel Planning Assistant</div>
+      <div class="uc-desc">User says "Plan me a 5-day trip to Ooty for ₹15,000". Agent calls flight API, hotel search, weather API, checks local event databases, and calculates budget — all autonomously before presenting the plan.</div>
+      <span class="uc-fit">Cross-API orchestration</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     9. GRAPH RAG
+════════════════════════════════════ -->
+<div class="rag-section" id="graph" style="--accent:#c084fc;--accent-bg:#c084fc;">
+  <div class="section-header">
+    <div class="section-icon">🕸️</div>
+    <div class="section-meta">
+      <div class="section-name">Graph RAG</div>
+      <div class="section-tagline">Retrieves from a knowledge graph of entities and relationships, not just text chunks.</div>
+    </div>
+    <div class="section-badges">
+      <span class="badge" style="color:#c084fc;border-color:rgba(192,132,252,0.3);">Relationship-aware</span>
+      <span class="badge" style="color:#c084fc;border-color:rgba(192,132,252,0.3);">Deep connections</span>
+      <span class="badge" style="color:#c084fc;border-color:rgba(192,132,252,0.3);">Complex queries</span>
+    </div>
+  </div>
+  <div class="why-box">
+    <span class="why-label">WHY USE</span>
+    <span class="why-text">Vector search finds semantically similar chunks, but it can't answer "how are these two entities connected?" or "what is the chain of effects from event A to outcome B?" Graph RAG traverses explicit relationships between entities — perfect for interconnected knowledge domains.</span>
+  </div>
+  <div class="flow-section">
+    <div class="flow-label">PIPELINE FLOW</div>
+    <div class="flow">
+      <div class="flow-node"><div class="fn-icon">❓</div><div class="fn-title">User Query</div><div class="fn-sub">"How is A connected to B?"</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🏷️</div><div class="fn-title">Entity Extraction</div><div class="fn-sub">Find named entities</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">🕸️</div><div class="fn-title">Graph Traversal</div><div class="fn-sub">Walk entity relationships</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">🔗</div><div class="fn-title">Subgraph</div><div class="fn-sub">Relevant nodes + edges</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node accent"><div class="fn-icon">📝</div><div class="fn-title">Summarise</div><div class="fn-sub">Convert graph to text</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">🧠</div><div class="fn-title">LLM</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-icon">✅</div><div class="fn-title">Answer</div></div>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:#4b5563;">🕸 Nodes = entities (people, drugs, companies). Edges = relationships (treats, owns, causes).</div>
+  </div>
+  <div class="usecases-grid">
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 01</div>
+      <div class="uc-title">Drug Interaction Checker</div>
+      <div class="uc-desc">Medical KB as a graph: Drug → treats → Disease, Drug → inhibits → Enzyme, Enzyme → metabolises → Drug. Query "Can patient take Drug A + Drug B?" traverses the interaction graph for conflicts.</div>
+      <span class="uc-fit">Relationship chains matter</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 02</div>
+      <div class="uc-title">Corporate Knowledge Map</div>
+      <div class="uc-desc">Graph of: Employee → works on → Project, Project → depends on → Team, Team → reports to → Manager. Query "who should I talk to about Project X?" traverses the org graph to find the right person.</div>
+      <span class="uc-fit">Org connections hidden in docs</span>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-num">IDEA 03</div>
+      <div class="uc-title">Fraud Detection Explainer</div>
+      <div class="uc-desc">Financial transactions as a graph. Query "Is this account suspicious?" — Graph RAG traverses: Account → transacts with → Account → linked to → flagged entity, surfacing the chain of suspicion.</div>
+      <span class="uc-fit">Multi-hop reasoning</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     COMPARISON TABLE
+════════════════════════════════════ -->
+<div class="comparison-section" id="compare">
+  <div class="comp-header">
+    <div class="comp-title">All RAG Types at a Glance</div>
+    <div class="comp-sub">Use this table to pick the right type before you start building.</div>
+  </div>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>RAG TYPE</th>
+          <th>ACCURACY</th>
+          <th>SPEED</th>
+          <th>COST</th>
+          <th>COMPLEXITY</th>
+          <th>BEST FOR</th>
+          <th>AVOID WHEN</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="dot" style="background:#6ee7b7"></span>Basic</td>
+          <td>⭐⭐</td><td>⭐⭐⭐⭐⭐</td><td>💰</td>
+          <td style="color:#6ee7b7">Beginner</td>
+          <td>Stable docs, low stakes</td>
+          <td>Medical / legal use cases</td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#f87171"></span>Self</td>
+          <td>⭐⭐⭐⭐⭐</td><td>⭐⭐</td><td>💰💰💰</td>
+          <td style="color:#fbbf24">Advanced</td>
+          <td>High-stakes accuracy</td>
+          <td>Speed-sensitive apps</td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#fbbf24"></span>Corrective</td>
+          <td>⭐⭐⭐⭐</td><td>⭐⭐⭐</td><td>💰💰</td>
+          <td style="color:#fbbf24">Intermediate</td>
+          <td>Stale or limited KB</td>
+          <td>No web access allowed</td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#a78bfa"></span>Fusion</td>
+          <td>⭐⭐⭐⭐</td><td>⭐⭐</td><td>💰💰💰</td>
+          <td style="color:#fbbf24">Intermediate</td>
+          <td>Vague or multi-angle queries</td>
+          <td>Simple factual Q&A</td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#34d399"></span>Speculative</td>
+          <td>⭐⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td><td>💰💰</td>
+          <td style="color:#f87171">Expert</td>
+          <td>Production at scale</td>
+          <td>Prototype / learning projects</td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#38bdf8"></span>Adaptive</td>
+          <td>⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td><td>💰💰</td>
+          <td style="color:#fbbf24">Intermediate</td>
+          <td>Mixed complexity queries</td>
+          <td>Queries are always complex</td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#f472b6"></span>Modular</td>
+          <td>⭐⭐⭐⭐</td><td>⭐⭐⭐</td><td>💰💰</td>
+          <td style="color:#f87171">Expert</td>
+          <td>Team / production systems</td>
+          <td>Solo / quick prototypes</td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#fb923c"></span>Agentic</td>
+          <td>⭐⭐⭐⭐⭐</td><td>⭐</td><td>💰💰💰💰</td>
+          <td style="color:#f87171">Expert</td>
+          <td>Multi-step, multi-tool tasks</td>
+          <td>Simple Q&A, tight latency</td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#c084fc"></span>Graph</td>
+          <td>⭐⭐⭐⭐⭐</td><td>⭐⭐</td><td>💰💰💰</td>
+          <td style="color:#f87171">Expert</td>
+          <td>Relationship-heavy domains</td>
+          <td>Flat document collections</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- LEARNING PATH -->
+<div style="margin-top:48px;border:1px solid var(--border);border-radius:16px;overflow:hidden;">
+  <div style="padding:24px 32px;border-bottom:1px solid var(--border);background:var(--bg2);">
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--text);">Recommended Learning Path</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px;">Build in this order — each step teaches you why the next one exists.</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;">
+    <div style="padding:20px 24px;border-right:1px solid var(--border);">
+      <div style="font-size:22px;margin-bottom:8px;">①</div>
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:#6ee7b7;margin-bottom:6px;">Basic RAG</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.6;">Build a handbook chatbot with LangChain + FAISS. Feel where it fails (bad retrieval → bad answers).</div>
+    </div>
+    <div style="padding:20px 24px;border-right:1px solid var(--border);">
+      <div style="font-size:22px;margin-bottom:8px;">②</div>
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:#fbbf24;margin-bottom:6px;">Corrective RAG</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.6;">Add a quality grader + web search fallback. See how a self-healing pipeline prevents outdated answers.</div>
+    </div>
+    <div style="padding:20px 24px;border-right:1px solid var(--border);">
+      <div style="font-size:22px;margin-bottom:8px;">③</div>
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:#a78bfa;margin-bottom:6px;">RAG Fusion</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.6;">Add query rewriting + RRF. Notice how complex questions suddenly return much better context.</div>
+    </div>
+    <div style="padding:20px 24px;border-right:1px solid var(--border);">
+      <div style="font-size:22px;margin-bottom:8px;">④</div>
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:#f87171;margin-bottom:6px;">Self-RAG</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.6;">Add self-grading loops. See hallucinations caught and retried. Now you're ready for high-stakes production.</div>
+    </div>
+    <div style="padding:20px 24px;">
+      <div style="font-size:22px;margin-bottom:8px;">⑤</div>
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:#fb923c;margin-bottom:6px;">Agentic / Graph RAG</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.6;">Build a multi-tool agent or knowledge graph. You'll have all the context to understand why these are powerful and expensive.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .main -->
+
+<div class="footer">
+  RAG COMPLETE GUIDE &nbsp;·&nbsp; 9 VARIANTS &nbsp;·&nbsp; 27 USE-CASES &nbsp;·&nbsp; BUILT FOR BEGINNERS
+</div>
+
+<script>
+  function scrollTo(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+</script>
+</body>
+</html>
