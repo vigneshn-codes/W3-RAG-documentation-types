@@ -1,0 +1,501 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-sans, sans-serif); }
+  body { background: transparent; }
+  .page { padding: 16px; max-width: 780px; margin: 0 auto; }
+
+  .title-block { text-align: center; margin-bottom: 18px; }
+  .title-block h1 { font-size: 20px; font-weight: 700; color: var(--color-text-primary); line-height: 1.3; }
+  .title-block p  { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .card { border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; background: #fff; }
+  @media (prefers-color-scheme: dark) {
+    .card { background: #1e1e1e; border-color: #333; }
+    .node-box { background: #2a2a2a !important; border-color: #444 !important; }
+    .node-box .label { color: #e0e0e0 !important; }
+    .node-box .sub   { color: #aaa !important; }
+    .verify-loop { background: #2a2200 !important; border-color: #b06000 !important; }
+    .insight { background: #252525 !important; }
+  }
+
+  .card-header { padding: 8px 14px; display: flex; align-items: center; gap: 8px; }
+  .card-header .icon { font-size: 16px; }
+  .card-header .name { font-size: 13px; font-weight: 700; color: #fff; }
+  .card-header .badge { margin-left: auto; font-size: 10px; background: rgba(255,255,255,0.25); color: #fff; padding: 2px 7px; border-radius: 20px; font-weight: 600; }
+
+  .card-body { padding: 12px 14px 14px; }
+  .use-case { font-size: 11px; color: #888; margin-bottom: 10px; font-style: italic; }
+
+  .flow-row { display: flex; align-items: center; gap: 0; flex-wrap: nowrap; }
+
+  .node-box {
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    background: #f9f9f9;
+    padding: 5px 8px;
+    text-align: center;
+    min-width: 64px;
+    max-width: 80px;
+  }
+  .node-box .emoji { font-size: 18px; display: block; margin-bottom: 2px; }
+  .node-box .label { font-size: 10px; font-weight: 600; color: #333; line-height: 1.2; }
+  .node-box .sub   { font-size: 9px; color: #888; margin-top: 1px; line-height: 1.2; }
+
+  .branch-row { display: flex; gap: 6px; margin-top: 8px; justify-content: center; }
+  .branch-tag { font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+  .tag-green  { background: #e6f4ea; color: #2e7d32; }
+  .tag-red    { background: #fce8e6; color: #c62828; }
+  .tag-blue   { background: #e3f2fd; color: #1565c0; }
+  .tag-orange { background: #fff3e0; color: #e65100; }
+
+  .graph-mini { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 3px; justify-content: center; align-items: center; }
+  .graph-node { font-size: 9px; padding: 3px 7px; border-radius: 20px; font-weight: 600; }
+  .gn-red  { background: #fce8e6; color: #b71c1c; }
+  .gn-blue { background: #e3f2fd; color: #0d47a1; }
+  .gn-grn  { background: #e8f5e9; color: #1b5e20; }
+  .gn-pur  { background: #f3e5f5; color: #4a148c; }
+
+  .verify-loop {
+    border: 1.5px dashed #b06000;
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 6px;
+    background: #fffde7;
+  }
+  .verify-loop-title { font-size: 9px; font-weight: 700; color: #b06000; margin-bottom: 5px; text-align: center; }
+
+  .insight { margin-top: 14px; background: #f5f5f5; border-radius: 10px; padding: 10px 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .insight-item { display: flex; align-items: flex-start; gap: 6px; }
+  .insight-dot  { width: 8px; height: 8px; border-radius: 50%; margin-top: 3px; flex-shrink: 0; }
+  .insight-text { font-size: 10px; color: var(--color-text-secondary); line-height: 1.4; }
+  .insight-text b { color: var(--color-text-primary); }
+
+  /* ═══════════════════════════════════════
+     ANIMATED ARROW DEFINITIONS
+     Each colour gets its own keyframe so
+     the marching-ants move at slightly
+     different speeds → feels alive
+  ═══════════════════════════════════════ */
+  @keyframes march-grn  { to { stroke-dashoffset: -18; } }
+  @keyframes march-pur  { to { stroke-dashoffset: -18; } }
+  @keyframes march-amb  { to { stroke-dashoffset: -18; } }
+  @keyframes march-red  { to { stroke-dashoffset: -18; } }
+  @keyframes march-gray { to { stroke-dashoffset: -18; } }
+
+  .arr-grn  { stroke-dasharray: 5 3; animation: march-grn  1.1s linear infinite; }
+  .arr-pur  { stroke-dasharray: 5 3; animation: march-pur  1.3s linear infinite; }
+  .arr-amb  { stroke-dasharray: 5 3; animation: march-amb  1.0s linear infinite; }
+  .arr-red  { stroke-dasharray: 5 3; animation: march-red  1.2s linear infinite; }
+  .arr-gray { stroke-dasharray: 5 3; animation: march-gray 1.5s linear infinite; }
+
+  /* Vertical animated arrows */
+  @keyframes march-v { to { stroke-dashoffset: -18; } }
+  .arr-v { stroke-dasharray: 5 3; animation: march-v 1.1s linear infinite; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="title-block">
+    <h1>4 flavours · RAG Design Patterns<br></h1>
+    <p><span style="font-size:14px;font-weight:600;color:#666">what I actually shipped | </span>  · 4 real-world use cases · all local-first 🛠️</p>
+  </div>
+
+  <div class="grid">
+
+    <!-- ══════════════════════════════════════
+         CARD 1 — BASIC RAG  (green)
+    ══════════════════════════════════════ -->
+    <div class="card">
+      <div class="card-header" style="background:#0d7a55;">
+        <span class="icon">🍳</span>
+        <span class="name">Basic RAG</span>
+        <span class="badge">Naive</span>
+      </div>
+      <div class="card-body">
+        <div class="use-case">Recipe Assistant · FAISS + Llama 3.2</div>
+
+        <!-- Docs ──► Chunks -->
+        <div class="flow-row" style="margin-bottom:6px;">
+          <div class="node-box" style="border-color:#0d7a55;">
+            <span class="emoji">📄</span>
+            <span class="label">Documents</span>
+          </div>
+          <svg width="34" height="20" style="flex-shrink:0;">
+            <line x1="2" y1="10" x2="26" y2="10" stroke="#0d7a55" stroke-width="2" class="arr-grn"/>
+            <polygon points="24,6 32,10 24,14" fill="#0d7a55"/>
+          </svg>
+          <div class="node-box" style="border-color:#0d7a55;">
+            <span class="emoji">🧩</span>
+            <span class="label">Chunks</span>
+            <span class="sub">500 chars</span>
+          </div>
+        </div>
+
+        <!-- Query ──► Embed ──► FAISS -->
+        <div class="flow-row" style="margin-bottom:6px;">
+          <div class="node-box">
+            <span class="emoji">💬</span>
+            <span class="label">Query</span>
+          </div>
+          <svg width="26" height="20" style="flex-shrink:0;">
+            <line x1="2" y1="10" x2="18" y2="10" stroke="#888" stroke-width="2" class="arr-gray"/>
+            <polygon points="16,6 24,10 16,14" fill="#888"/>
+          </svg>
+          <div class="node-box" style="border-color:#0d7a55;">
+            <span class="emoji">🔢</span>
+            <span class="label">Embed</span>
+            <span class="sub">nomic-text</span>
+          </div>
+          <svg width="26" height="20" style="flex-shrink:0;">
+            <line x1="2" y1="10" x2="18" y2="10" stroke="#0d7a55" stroke-width="2" class="arr-grn"/>
+            <polygon points="16,6 24,10 16,14" fill="#0d7a55"/>
+          </svg>
+          <div class="node-box" style="border-color:#0d7a55;">
+            <span class="emoji">🗄️</span>
+            <span class="label">FAISS</span>
+            <span class="sub">top-k chunks</span>
+          </div>
+        </div>
+
+        <!-- Context ──► LLM ──► Response -->
+        <div class="flow-row">
+          <div class="node-box" style="border-color:#0d7a55;">
+            <span class="emoji">📋</span>
+            <span class="label">Context</span>
+          </div>
+          <svg width="26" height="20" style="flex-shrink:0;">
+            <line x1="2" y1="10" x2="18" y2="10" stroke="#0d7a55" stroke-width="2" class="arr-grn"/>
+            <polygon points="16,6 24,10 16,14" fill="#0d7a55"/>
+          </svg>
+          <div class="node-box" style="border-color:#0d7a55; background:#e8f5e9;">
+            <span class="emoji">🤖</span>
+            <span class="label">Llama 3.2</span>
+            <span class="sub">local</span>
+          </div>
+          <svg width="26" height="20" style="flex-shrink:0;">
+            <line x1="2" y1="10" x2="18" y2="10" stroke="#0d7a55" stroke-width="2" class="arr-grn"/>
+            <polygon points="16,6 24,10 16,14" fill="#0d7a55"/>
+          </svg>
+          <div class="node-box" style="border-color:#0d7a55; background:#e8f5e9;">
+            <span class="emoji">✅</span>
+            <span class="label">Response</span>
+          </div>
+        </div>
+
+        <div class="branch-row">
+          <span class="branch-tag tag-green">Simple · Fast · Local · No hallucination guard</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         CARD 2 — CORRECTIVE RAG  (purple)
+    ══════════════════════════════════════ -->
+    <div class="card">
+      <div class="card-header" style="background:#5c35c9;">
+        <span class="icon">🖥️</span>
+        <span class="name">Corrective RAG</span>
+        <span class="badge">CRAG</span>
+      </div>
+      <div class="card-body">
+        <div class="use-case">IT Helpdesk · ChromaDB + Tavily fallback</div>
+
+        <!-- Query ──► ChromaDB ──► LLM Grader -->
+        <div class="flow-row" style="margin-bottom:6px;">
+          <div class="node-box">
+            <span class="emoji">💬</span>
+            <span class="label">Query</span>
+          </div>
+          <svg width="26" height="20" style="flex-shrink:0;">
+            <line x1="2" y1="10" x2="18" y2="10" stroke="#888" stroke-width="2" class="arr-gray"/>
+            <polygon points="16,6 24,10 16,14" fill="#888"/>
+          </svg>
+          <div class="node-box" style="border-color:#5c35c9;">
+            <span class="emoji">🗄️</span>
+            <span class="label">ChromaDB</span>
+            <span class="sub">local docs</span>
+          </div>
+          <svg width="26" height="20" style="flex-shrink:0;">
+            <line x1="2" y1="10" x2="18" y2="10" stroke="#5c35c9" stroke-width="2" class="arr-pur"/>
+            <polygon points="16,6 24,10 16,14" fill="#5c35c9"/>
+          </svg>
+          <div class="node-box" style="border-color:#5c35c9; background:#f3e5f5;">
+            <span class="emoji">⚖️</span>
+            <span class="label">LLM Grader</span>
+            <span class="sub">relevant?</span>
+          </div>
+        </div>
+
+        <!-- Branch: Match / No Match -->
+        <div style="display:flex; gap:6px; margin-bottom:6px; align-items:flex-start;">
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+            <div style="display:flex; align-items:center; gap:3px; margin-bottom:4px;">
+              <svg width="16" height="20" style="flex-shrink:0;">
+                <line x1="8" y1="2" x2="8" y2="14" stroke="#1565c0" stroke-width="2" class="arr-v" style="animation-name:march-v;"/>
+                <polygon points="4,12 8,18 12,12" fill="#1565c0"/>
+              </svg>
+              <span class="branch-tag tag-blue">✓ Match</span>
+            </div>
+            <div class="node-box" style="border-color:#1565c0; background:#e3f2fd; width:100%; max-width:100%;">
+              <span class="emoji">📚</span>
+              <span class="label">Internal docs</span>
+            </div>
+          </div>
+          <div style="width:1px; background:#ddd; margin:16px 0;"></div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+            <div style="display:flex; align-items:center; gap:3px; margin-bottom:4px;">
+              <svg width="16" height="20" style="flex-shrink:0;">
+                <line x1="8" y1="2" x2="8" y2="14" stroke="#e65100" stroke-width="2" class="arr-v" style="animation-name:march-v; animation-duration:1.4s;"/>
+                <polygon points="4,12 8,18 12,12" fill="#e65100"/>
+              </svg>
+              <span class="branch-tag tag-orange">✗ No match</span>
+            </div>
+            <div class="node-box" style="border-color:#e65100; background:#fff3e0; width:100%; max-width:100%;">
+              <span class="emoji">🌐</span>
+              <span class="label">Tavily Web</span>
+              <span class="sub">fallback search</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Both ──► LLM ──► Response -->
+        <div class="flow-row">
+          <div class="node-box" style="border-color:#5c35c9; background:#f3e5f5; flex:1; max-width:120px;">
+            <span class="emoji">🤖</span>
+            <span class="label">Llama 3 · FastAPI</span>
+          </div>
+          <svg width="26" height="20" style="flex-shrink:0;">
+            <line x1="2" y1="10" x2="18" y2="10" stroke="#5c35c9" stroke-width="2" class="arr-pur"/>
+            <polygon points="16,6 24,10 16,14" fill="#5c35c9"/>
+          </svg>
+          <div class="node-box" style="border-color:#5c35c9; background:#f3e5f5;">
+            <span class="emoji">💬</span>
+            <span class="label">Response</span>
+          </div>
+        </div>
+
+        <div class="branch-row">
+          <span class="branch-tag tag-blue">Self-corrects · Falls back to web if needed</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         CARD 3 — SELF-RAG  (amber)
+    ══════════════════════════════════════ -->
+    <div class="card">
+      <div class="card-header" style="background:#b06000;">
+        <span class="icon">💰</span>
+        <span class="name">Self-RAG</span>
+        <span class="badge">Verify</span>
+      </div>
+      <div class="card-body">
+        <div class="use-case">Financial QA · Hallucination check · Streamlit</div>
+
+        <!-- Query ──► ChromaDB ──► Generate -->
+        <div class="flow-row" style="margin-bottom:6px;">
+          <div class="node-box">
+            <span class="emoji">💬</span>
+            <span class="label">Query</span>
+          </div>
+          <svg width="22" height="20" style="flex-shrink:0;">
+            <line x1="2" y1="10" x2="15" y2="10" stroke="#888" stroke-width="2" class="arr-gray"/>
+            <polygon points="13,6 20,10 13,14" fill="#888"/>
+          </svg>
+          <div class="node-box" style="border-color:#b06000;">
+            <span class="emoji">🗄️</span>
+            <span class="label">ChromaDB</span>
+          </div>
+          <svg width="22" height="20" style="flex-shrink:0;">
+            <line x1="2" y1="10" x2="15" y2="10" stroke="#b06000" stroke-width="2" class="arr-amb"/>
+            <polygon points="13,6 20,10 13,14" fill="#b06000"/>
+          </svg>
+          <div class="node-box" style="border-color:#b06000; background:#fff8e1;">
+            <span class="emoji">🤖</span>
+            <span class="label">Generate</span>
+          </div>
+        </div>
+
+        <!-- Self-verify loop box -->
+        <div class="verify-loop">
+          <div class="verify-loop-title">🔄 Self-Verify Loop</div>
+          <div class="flow-row" style="justify-content:center;">
+            <div class="node-box" style="border-color:#b06000; background:#fff8e1; min-width:76px; max-width:84px;">
+              <span class="emoji">🔍</span>
+              <span class="label">Extract nums</span>
+              <span class="sub">$4.2B · 12%</span>
+            </div>
+            <svg width="30" height="20" style="flex-shrink:0;">
+              <line x1="2" y1="10" x2="22" y2="10" stroke="#b06000" stroke-width="2" class="arr-amb"/>
+              <polygon points="20,6 28,10 20,14" fill="#b06000"/>
+            </svg>
+            <div class="node-box" style="border-color:#b06000; background:#fff8e1; min-width:76px; max-width:84px;">
+              <span class="emoji">📋</span>
+              <span class="label">Cross-check</span>
+              <span class="sub">in context?</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Verified / Flagged branches -->
+        <div style="display:flex; gap:6px;">
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+            <div style="display:flex; align-items:center; gap:3px; margin-bottom:4px;">
+              <svg width="16" height="20" style="flex-shrink:0;">
+                <line x1="8" y1="2" x2="8" y2="14" stroke="#2e7d32" stroke-width="2" class="arr-v" style="animation-name:march-v; animation-duration:0.9s;"/>
+                <polygon points="4,12 8,18 12,12" fill="#2e7d32"/>
+              </svg>
+              <span class="branch-tag tag-green">✅ Verified</span>
+            </div>
+            <div class="node-box" style="border-color:#2e7d32; background:#e8f5e9; width:100%; max-width:100%;">
+              <span class="label">Green checkmark</span>
+              <span class="sub">answer shown</span>
+            </div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+            <div style="display:flex; align-items:center; gap:3px; margin-bottom:4px;">
+              <svg width="16" height="20" style="flex-shrink:0;">
+                <line x1="8" y1="2" x2="8" y2="14" stroke="#c62828" stroke-width="2" class="arr-v" style="animation-name:march-v; animation-duration:1.3s;"/>
+                <polygon points="4,12 8,18 12,12" fill="#c62828"/>
+              </svg>
+              <span class="branch-tag tag-red">⚠️ Flagged</span>
+            </div>
+            <div class="node-box" style="border-color:#c62828; background:#fce8e6; width:100%; max-width:100%;">
+              <span class="label">Hallucination!</span>
+              <span class="sub">show raw context</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="branch-row">
+          <span class="branch-tag tag-orange">Zero tolerance for wrong numbers · Audit trail</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         CARD 4 — GRAPH RAG  (red)
+    ══════════════════════════════════════ -->
+    <div class="card">
+      <div class="card-header" style="background:#c0392b;">
+        <span class="icon">🕸️</span>
+        <span class="name">Graph RAG</span>
+        <span class="badge">Neo4j</span>
+      </div>
+      <div class="card-body">
+        <div class="use-case">Supply Chain Risk · Neo4j + GPT-4 · Multi-hop</div>
+
+        <!-- Docs ──► Entity extract ──► Neo4j -->
+        <div class="flow-row" style="margin-bottom:6px;">
+          <div class="node-box">
+            <span class="emoji">📄</span>
+            <span class="label">5 Docs</span>
+            <span class="sub">suppliers etc.</span>
+          </div>
+          <svg width="26" height="20" style="flex-shrink:0;">
+            <line x1="2" y1="10" x2="18" y2="10" stroke="#888" stroke-width="2" class="arr-gray"/>
+            <polygon points="16,6 24,10 16,14" fill="#888"/>
+          </svg>
+          <div class="node-box" style="border-color:#c0392b;">
+            <span class="emoji">🧠</span>
+            <span class="label">Entity extract</span>
+          </div>
+          <svg width="26" height="20" style="flex-shrink:0;">
+            <line x1="2" y1="10" x2="18" y2="10" stroke="#c0392b" stroke-width="2" class="arr-red"/>
+            <polygon points="16,6 24,10 16,14" fill="#c0392b"/>
+          </svg>
+          <div class="node-box" style="border-color:#c0392b; background:#fce8e6;">
+            <span class="emoji">🗂️</span>
+            <span class="label">Neo4j</span>
+            <span class="sub">28n · 43 rels</span>
+          </div>
+        </div>
+
+        <!-- Graph chain pills -->
+        <div class="graph-mini">
+          <span class="graph-node gn-red">RiskEvent</span>
+          <svg width="20" height="14" style="flex-shrink:0;">
+            <line x1="2" y1="7" x2="14" y2="7" stroke="#c0392b" stroke-width="1.8" class="arr-red"/>
+            <polygon points="12,4 18,7 12,10" fill="#c0392b"/>
+          </svg>
+          <span class="graph-node gn-blue">Supplier</span>
+          <svg width="20" height="14" style="flex-shrink:0;">
+            <line x1="2" y1="7" x2="14" y2="7" stroke="#c0392b" stroke-width="1.8" class="arr-red"/>
+            <polygon points="12,4 18,7 12,10" fill="#c0392b"/>
+          </svg>
+          <span class="graph-node gn-grn">Component</span>
+          <svg width="20" height="14" style="flex-shrink:0;">
+            <line x1="2" y1="7" x2="14" y2="7" stroke="#c0392b" stroke-width="1.8" class="arr-red"/>
+            <polygon points="12,4 18,7 12,10" fill="#c0392b"/>
+          </svg>
+          <span class="graph-node gn-pur">Product</span>
+        </div>
+        <div style="text-align:center; font-size:9px; color:#c0392b; margin:3px 0 6px; font-style:italic;">Typhoon in Taiwan → which products at risk?</div>
+
+        <!-- NL Query ──► Cypher ──► Graph result -->
+        <div class="flow-row">
+          <div class="node-box">
+            <span class="emoji">💬</span>
+            <span class="label">NL Query</span>
+          </div>
+          <svg width="22" height="20" style="flex-shrink:0;">
+            <line x1="2" y1="10" x2="15" y2="10" stroke="#888" stroke-width="2" class="arr-gray"/>
+            <polygon points="13,6 20,10 13,14" fill="#888"/>
+          </svg>
+          <div class="node-box" style="border-color:#c0392b; background:#fce8e6;">
+            <span class="emoji">⚙️</span>
+            <span class="label">Cypher gen</span>
+            <span class="sub">GPT-4</span>
+          </div>
+          <svg width="22" height="20" style="flex-shrink:0;">
+            <line x1="2" y1="10" x2="15" y2="10" stroke="#c0392b" stroke-width="2" class="arr-red"/>
+            <polygon points="13,6 20,10 13,14" fill="#c0392b"/>
+          </svg>
+          <div class="node-box" style="border-color:#c0392b; background:#fce8e6;">
+            <span class="emoji">📊</span>
+            <span class="label">Graph result</span>
+            <span class="sub">exact revenue</span>
+          </div>
+        </div>
+
+        <div class="branch-row">
+          <span class="branch-tag tag-red">Multi-hop · Cross-doc · Relationships win</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end .grid -->
+
+  <!-- ── INSIGHT BAR ── -->
+  <div class="insight">
+    <div class="insight-item">
+      <div class="insight-dot" style="background:#0d7a55;"></div>
+      <div class="insight-text"><b>Basic RAG</b> — simple Q&amp;A on docs, fast, no frills</div>
+    </div>
+    <div class="insight-item">
+      <div class="insight-dot" style="background:#5c35c9;"></div>
+      <div class="insight-text"><b>Corrective RAG</b> — grades docs, auto-falls back to web</div>
+    </div>
+    <div class="insight-item">
+      <div class="insight-dot" style="background:#b06000;"></div>
+      <div class="insight-text"><b>Self-RAG</b> — verifies every number before answering</div>
+    </div>
+    <div class="insight-item">
+      <div class="insight-dot" style="background:#c0392b;"></div>
+      <div class="insight-text"><b>Graph RAG</b> — follows chains across connected entities</div>
+    </div>
+  </div>
+
+  <div style="text-align:center; font-size:10px; color:#aaa; margin-top:10px;">
+    Python · LangChain · Ollama · Streamlit · FastAPI · Neo4j · github.com/vigneshn-codes
+  </div>
+
+</div>
+</body>
+</html>
